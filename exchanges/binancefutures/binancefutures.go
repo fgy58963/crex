@@ -16,7 +16,12 @@ import (
 // BinanceFutures the Binance futures exchange
 type BinanceFutures struct {
 	client *futures.Client
+	precision int
 	symbol string
+}
+
+func (b *BinanceFutures) SetPrecision(p int){
+	b.precision = p
 }
 
 func (b *BinanceFutures) GetName() (name string) {
@@ -180,9 +185,14 @@ func (b *BinanceFutures) CloseShort(symbol string, orderType OrderType, price fl
 func (b *BinanceFutures) PlaceOrder(symbol string, direction Direction, orderType OrderType, price float64,
 	size float64, opts ...PlaceOrderOption) (result *Order, err error) {
 	params := ParsePlaceOrderParameter(opts...)
+	strSize := fmt.Sprintf("%d",int(size))
+	tar := fmt.Sprintf("%%.%df",b.precision)
+	if b.precision > 0 {
+		strSize = fmt.Sprintf(tar,size)
+	}
 	service := b.client.NewCreateOrderService().
 		Symbol(symbol).
-		Quantity(fmt.Sprint(size)).
+		Quantity(strSize).
 		ActivationPrice(fmt.Sprint(params.ActivationPrice)).
 		CallbackRate(fmt.Sprint(params.CallbackRate))
 	if params.ReduceOnly {
